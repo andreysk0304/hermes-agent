@@ -154,6 +154,36 @@ class _SafeWriter:
         return getattr(self._inner, name)
 
 
+def _extract_usage_tokens(resp: Any) -> tuple:
+    """Извлекает использование токенов из ответа провайдера (prompt/completion/total)."""
+    if resp is None:
+        return None, None, None
+    usage = getattr(resp, "usage", None)
+    if not usage:
+        return None, None, None
+
+    def _get(obj: Any, key: str) -> Any:
+        if obj is None:
+            return None
+        if isinstance(obj, dict):
+            return obj.get(key)
+        return getattr(obj, key, None)
+
+    prompt = _get(usage, "prompt_tokens") or _get(usage, "input_tokens")
+    completion = _get(usage, "completion_tokens") or _get(usage, "output_tokens")
+    total = _get(usage, "total_tokens")
+    if total is None and (prompt is not None or completion is not None):
+        try:
+            total = (prompt or 0) + (completion or 0)
+        except Exception:
+            total = None
+    return (
+        int(prompt) if isinstance(prompt, (int, float, str)) and str(prompt).isdigit() else (prompt if isinstance(prompt, int) else None),
+        int(completion) if isinstance(completion, (int, float, str)) and str(completion).isdigit() else (completion if isinstance(completion, int) else None),
+        int(total) if isinstance(total, (int, float, str)) and str(total).isdigit() else (total if isinstance(total, int) else None),
+    )
+
+
 class IterationBudget:
     """Thread-safe shared iteration counter for parent and child agents.
 
@@ -4284,6 +4314,12 @@ class AIAgent:
                     
                     if not self.quiet_mode:
                         print(f"{self.log_prefix}⏱️  API call completed in {api_duration:.2f}s")
+                        pt, ct, tt = _extract_usage_tokens(response)
+                        if pt is not None or ct is not None or tt is not None:
+                            pt_s = "?" if pt is None else f"{pt:,}"
+                            ct_s = "?" if ct is None else f"{ct:,}"
+                            tt_s = "?" if tt is None else f"{tt:,}"
+                            print(f"{self.log_prefix}   🧾 Tokens: prompt={pt_s}, completion={ct_s}, total={tt_s}")
                     
                     if self.verbose_logging:
                         # Log response with provider info if available

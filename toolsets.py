@@ -46,6 +46,8 @@ _HERMES_CORE_TOOLS = [
     "browser_type", "browser_scroll", "browser_back",
     "browser_press", "browser_close", "browser_get_images",
     "browser_vision",
+    # Email UI (gated by env)
+    "yandex_mail_fetch",
     # Text-to-speech
     "text_to_speech",
     # Planning & memory
@@ -119,7 +121,8 @@ TOOLSETS = {
             "browser_navigate", "browser_snapshot", "browser_click",
             "browser_type", "browser_scroll", "browser_back",
             "browser_press", "browser_close", "browser_get_images",
-            "browser_vision", "web_search"
+            "browser_vision", "web_search",
+            "yandex_mail_fetch",
         ],
         "includes": []
     },
