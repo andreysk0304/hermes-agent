@@ -82,7 +82,6 @@ def _discover_tools():
         "tools.skills_tool",
         "tools.skill_manager_tool",
         "tools.browser_tool",
-        "tools.yandex_mail_tool",
         "tools.cronjob_tools",
         "tools.rl_training_tool",
         "tools.tts_tool",
